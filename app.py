@@ -386,12 +386,13 @@ with tab4:
         if not movies.empty:
             fig, ax = plt.subplots(figsize=(5, 4))
             ax.hist(movies["duration_min"], bins=35, color=NETFLIX_RED, edgecolor="#0d0d0d", alpha=0.85)
-            # KDE overlay
-            from scipy.stats import gaussian_kde
-            kde = gaussian_kde(movies["duration_min"].dropna())
-            xs = np.linspace(movies["duration_min"].min(), movies["duration_min"].max(), 200)
+            # KDE overlay via numpy (no scipy needed)
+            data = movies["duration_min"].dropna().values
+            bw = 1.06 * data.std() * len(data) ** (-0.2)
+            xs = np.linspace(data.min(), data.max(), 200)
+            kde_vals = np.mean(np.exp(-0.5 * ((xs[:, None] - data[None, :]) / bw) ** 2), axis=1) / (bw * np.sqrt(2 * np.pi))
             ax2 = ax.twinx()
-            ax2.plot(xs, kde(xs), color=ACCENT_GOLD, linewidth=2)
+            ax2.plot(xs, kde_vals, color=ACCENT_GOLD, linewidth=2)
             ax2.set_yticks([])
             ax2.tick_params(colors="#0d0d0d")
             ax.set_xlabel("Duration (minutes)")
